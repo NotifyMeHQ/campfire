@@ -12,6 +12,8 @@
 
 namespace NotifyMeHQ\Campfire;
 
+use GuzzleHttp\Client;
+use NotifyMeHQ\NotifyMe\Arr;
 use NotifyMeHQ\NotifyMe\FactoryInterface;
 
 class CampfireFactory implements FactoryInterface
@@ -25,6 +27,10 @@ class CampfireFactory implements FactoryInterface
      */
     public function make(array $config)
     {
-        return new CampfireGateway($config);
+        Arr::requires($config, ['from', 'token']);
+
+        $client = new Client();
+
+        return new CampfireGateway($client, $config);
     }
 }

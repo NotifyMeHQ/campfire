@@ -12,13 +12,16 @@
 
 namespace NotifyMeHQ\Campfire;
 
-use NotifyMeHQ\NotifyMe\AbstractGateway;
+use GuzzleHttp\Client;
 use NotifyMeHQ\NotifyMe\Arr;
 use NotifyMeHQ\NotifyMe\GatewayInterface;
+use NotifyMeHQ\NotifyMe\HttpGatewayTrait;
 use NotifyMeHQ\NotifyMe\Response;
 
-class CampfireGateway extends AbstractGateway implements GatewayInterface
+class CampfireGateway implements GatewayInterface
 {
+    use HttpGatewayTrait;
+
     /**
      * Gateway api endpoint.
      *
@@ -73,16 +76,30 @@ class CampfireGateway extends AbstractGateway implements GatewayInterface
     ];
 
     /**
+     * The http client.
+     *
+     * @var \GuzzleHttp\Client
+     */
+    protected $client;
+
+    /**
+     * Configuration options.
+     *
+     * @var string[]
+     */
+    protected $config;
+
+    /**
      * Create a new campfire gateway instance.
      *
-     * @param string[] $config
+     * @param \GuzzleHttp\Client $client
+     * @param string[]           $config
      *
      * @return void
      */
-    public function __construct(array $config)
+    public function __construct(Client $client, array $config)
     {
-        $this->requires($config, ['from', 'token']);
-
+        $this->client = $client;
         $this->config = $config;
     }
 
@@ -153,7 +170,7 @@ class CampfireGateway extends AbstractGateway implements GatewayInterface
         unset($params['token']);
         unset($params['from']);
 
-        $rawResponse = $this->getHttpClient()->{$method}($url, [
+        $rawResponse = $this->client->{$method}($url, [
             'exceptions'      => false,
             'timeout'         => '80',
             'connect_timeout' => '30',
