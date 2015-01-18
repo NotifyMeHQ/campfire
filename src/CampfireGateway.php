@@ -27,13 +27,6 @@ class CampfireGateway extends AbstractGateway implements GatewayInterface
     protected $endpoint = 'https://{domain}.campfirenow.com';
 
     /**
-     * Gateway display name.
-     *
-     * @var string
-     */
-    protected $displayName = 'campfire';
-
-    /**
      * Campfire allowed message types.
      *
      * @var string[]
