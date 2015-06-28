@@ -98,24 +98,22 @@ class CampfireGateway implements GatewayInterface
      */
     public function notify($to, $message)
     {
-        $params = [
-            'to'    => $to,
-            'token' => $this->config['token'],
-        ];
-
         $type = Arr::get($this->config, 'type', 'TextMessage');
 
         if (!in_array($type, $this->allowedTypeMessages)) {
             $type = 'TextMessage';
         }
 
+        $params = [
+            'to'   => $to,
+            'type' => $type
+        ];
+
         if ($type === 'SoundMessage') {
             $params['body'] = in_array($message, $this->allowedSounds) ? $message : 'horn';
         } else {
             $params['body'] = $message;
         }
-
-        $params['type'] = $type;
 
         return $this->commit($params);
     }
@@ -131,29 +129,31 @@ class CampfireGateway implements GatewayInterface
     {
         $success = false;
 
-        $token = $params['token'];
-        unset($params['token']);
-
         $rawResponse = $this->client->post($this->buildUrlFromString("room/{$params['to']}/speak.json"), [
             'exceptions'      => false,
             'timeout'         => '80',
             'connect_timeout' => '30',
             'headers'         => [
-                'Authorization' => 'Basic '.base64_encode($token.':x'),
+                'Authorization' => 'Basic '.base64_encode($this->config['token'].':x'),
                 'Content-Type'  => 'application/json',
             ],
             'json' => ['message' => $params],
         ]);
 
-        if ($rawResponse->getStatusCode() == 201) {
-            $response = [];
-            $success = true;
-        } elseif ($rawResponse->getStatusCode() == 404) {
-            $response['error'] = 'Invalid room.';
-        } elseif ($rawResponse->getStatusCode() == 400) {
-            $response['error'] = 'Incorrect request values.';
-        } else {
-            $response['error'] = $this->responseError($rawResponse);
+        $response = [];
+
+        switch ($rawResponse->getStatusCode()) {
+            case 201:
+                $success = true;
+                break;
+            case 400:
+                $response['error'] = 'Incorrect request values.';
+                break;
+            case 404:
+                $response['error'] = 'Invalid room.';
+                break;
+            default:
+                $response['error'] = $this->responseError($rawResponse);
         }
 
         return $this->mapResponse($success, $response);
