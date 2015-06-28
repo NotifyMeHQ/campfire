@@ -127,7 +127,7 @@ class CampfireGateway implements GatewayInterface
      *
      * @return mixed
      */
-    protected function commit(array $params = [])
+    protected function commit(array $params)
     {
         $success = false;
 
