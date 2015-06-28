@@ -140,6 +140,7 @@ class CampfireGateway implements GatewayInterface
 
         switch ($rawResponse->getStatusCode()) {
             case 201:
+                $response = [];
                 $success = true;
                 break;
             case 400:
