@@ -138,20 +138,18 @@ class CampfireGateway implements GatewayInterface
             'json' => ['message' => $params],
         ]);
 
-        $response = [];
-
         switch ($rawResponse->getStatusCode()) {
             case 201:
                 $success = true;
                 break;
             case 400:
-                $response['error'] = 'Incorrect request values.';
+                $response = ['error' => 'Incorrect request values.'];
                 break;
             case 404:
-                $response['error'] = 'Invalid room.';
+                $response = ['error' => 'Invalid room.'];
                 break;
             default:
-                $response['error'] = $this->responseError($rawResponse);
+                $response = $this->responseError($rawResponse);
         }
 
         return $this->mapResponse($success, $response);
