@@ -75,20 +75,6 @@ class CampfireGateway implements GatewayInterface
     ];
 
     /**
-     * The http client.
-     *
-     * @var \GuzzleHttp\Client
-     */
-    protected $client;
-
-    /**
-     * Configuration options.
-     *
-     * @var string[]
-     */
-    protected $config;
-
-    /**
      * Create a new campfire gateway instance.
      *
      * @param \GuzzleHttp\Client $client
@@ -105,79 +91,56 @@ class CampfireGateway implements GatewayInterface
     /**
      * Send a notification.
      *
-     * @param string   $to
-     * @param string   $message
-     * @param string[] $options
+     * @param string $to
+     * @param string $message
      *
      * @return \NotifyMeHQ\Contracts\ResponseInterface
      */
-    public function notify($to, $message, array $options = [])
+    public function notify($to, $message)
     {
-        $options['to'] = $to;
+        $params = [
+            'to'    => $to,
+            'token' => $this->config['token'],
+        ];
 
-        $params = $this->addMessage($message, $params, $options);
-
-        return $this->commit('post', $this->buildUrlFromString("room/{$to}/speak.json"), $params);
-    }
-
-    /**
-     * Add a message to the request.
-     *
-     * @param string   $message
-     * @param string[] $params
-     * @param string[] $options
-     *
-     * @return array
-     */
-    protected function addMessage($message, array $params, array $options)
-    {
-        $params['token'] = Arr::get($options, 'token', $this->config['token']);
-        $params['from'] = Arr::get($options, 'from', $this->config['from']);
-
-        $type = Arr::get($options, 'type', 'TextMessage');
+        $type = Arr::get($this->config, 'type', 'TextMessage');
 
         if (!in_array($type, $this->allowedTypeMessages)) {
             $type = 'TextMessage';
         }
 
-        $params['body'] = $message;
-
-        if ($type == 'SoundMessage') {
+        if ($type === 'SoundMessage') {
             $params['body'] = in_array($message, $this->allowedSounds) ? $message : 'horn';
+        } else {
+            $params['body'] = $message;
         }
 
         $params['type'] = $type;
 
-        return $params;
+        return $this->commit($params);
     }
 
     /**
      * Commit a HTTP request.
      *
-     * @param string   $method
-     * @param string   $url
      * @param string[] $params
-     * @param string[] $options
      *
      * @return mixed
      */
-    protected function commit($method = 'post', $url, array $params = [], array $options = [])
+    protected function commit(array $params = [])
     {
         $success = false;
 
         $token = $params['token'];
-
         unset($params['token']);
-        unset($params['from']);
 
-        $rawResponse = $this->client->{$method}($url, [
+        $rawResponse = $this->client->post($this->buildUrlFromString("room/{$params['to']}/speak.json"), [
             'exceptions'      => false,
             'timeout'         => '80',
             'connect_timeout' => '30',
             'headers'         => [
                 'Authorization' => 'Basic '.base64_encode($token.':x'),
                 'Content-Type'  => 'application/json',
-                'User-Agent'    => 'notifyme/1.0 (https://github.com/dinkbit/notifyme)',
             ],
             'json' => ['message' => $params],
         ]);
@@ -186,7 +149,7 @@ class CampfireGateway implements GatewayInterface
             $response = [];
             $success = true;
         } elseif ($rawResponse->getStatusCode() == 404) {
-            $response['error'] = 'Inválid room.';
+            $response['error'] = 'Invalid room.';
         } elseif ($rawResponse->getStatusCode() == 400) {
             $response['error'] = 'Incorrect request values.';
         } else {
@@ -215,7 +178,7 @@ class CampfireGateway implements GatewayInterface
     /**
      * Get the default json response.
      *
-     * @param string $rawResponse
+     * @param \GuzzleHttp\Message\Response $rawResponse
      *
      * @return array
      */
