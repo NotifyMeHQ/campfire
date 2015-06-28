@@ -22,14 +22,14 @@ class CampfireGateway implements GatewayInterface
     use HttpGatewayTrait;
 
     /**
-     * Gateway api endpoint.
+     * The api endpoint.
      *
      * @var string
      */
     protected $endpoint = 'https://{domain}.campfirenow.com';
 
     /**
-     * Campfire allowed message types.
+     * The allowed message types.
      *
      * @var string[]
      */
@@ -41,7 +41,7 @@ class CampfireGateway implements GatewayInterface
     ];
 
     /**
-     * Campfire allowed sound types.
+     * The allowed sound types.
      *
      * @var string[]
      */
@@ -112,18 +112,18 @@ class CampfireGateway implements GatewayInterface
             $params['body'] = $message;
         }
 
-        return $this->commit($this->buildUrlFromString("room/{$to}/speak.json"), $params);
+        return $this->send($this->buildUrlFromString("room/{$to}/speak.json"), $params);
     }
 
     /**
-     * Commit a HTTP request.
+     * Send the notification over the wire.
      *
      * @param string   $url
      * @param string[] $params
      *
-     * @return mixed
+     * @return \NotifyMeHQ\Contracts\ResponseInterface
      */
-    protected function commit($url, array $params)
+    protected function send($url, array $params)
     {
         $success = false;
 
@@ -158,7 +158,7 @@ class CampfireGateway implements GatewayInterface
     }
 
     /**
-     * Map HTTP response to response object.
+     * Map the raw response to our response object.
      *
      * @param bool  $success
      * @param array $response
