@@ -106,7 +106,7 @@ class CampfireGateway implements GatewayInterface
 
         $params = [
             'to'   => $to,
-            'type' => $type
+            'type' => $type,
         ];
 
         if ($type === 'SoundMessage') {
