@@ -104,10 +104,7 @@ class CampfireGateway implements GatewayInterface
             $type = 'TextMessage';
         }
 
-        $params = [
-            'to'   => $to,
-            'type' => $type,
-        ];
+        $params = ['type' => $type];
 
         if ($type === 'SoundMessage') {
             $params['body'] = in_array($message, $this->allowedSounds) ? $message : 'horn';
@@ -115,21 +112,22 @@ class CampfireGateway implements GatewayInterface
             $params['body'] = $message;
         }
 
-        return $this->commit($params);
+        return $this->commit($this->buildUrlFromString("room/{$to}/speak.json"), $params);
     }
 
     /**
      * Commit a HTTP request.
      *
+     * @param string   $url
      * @param string[] $params
      *
      * @return mixed
      */
-    protected function commit(array $params)
+    protected function commit($url, array $params)
     {
         $success = false;
 
-        $rawResponse = $this->client->post($this->buildUrlFromString("room/{$params['to']}/speak.json"), [
+        $rawResponse = $this->client->post($url, [
             'exceptions'      => false,
             'timeout'         => '80',
             'connect_timeout' => '30',
